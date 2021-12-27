@@ -1,4 +1,4 @@
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import (QApplication,QFileDialog, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSlider,QVBoxLayout, QWidget)
 from PyQt6.QtGui import QImage,QPixmap
 
@@ -12,6 +12,13 @@ class bboxChecker(QWidget):
     def __init__(self, parent=None):
         super(bboxChecker, self).__init__(parent)
 
+        self.idx = 0
+        self.w = 1280
+        self.h = 720
+        self.frameCount = 0
+        self.cap = None
+
+        ## PyQt6 GUI
         self.layout_main = QVBoxLayout()
 
         #self.widget_display = QOpenGLWidget()
@@ -24,8 +31,12 @@ class bboxChecker(QWidget):
         self.layout_control = QHBoxLayout()
         self.btn_load = QPushButton("Load")
         self.label_frame = QLabel("/")
+        self.btn_left = QPushButton("<-")
+        self.btn_right = QPushButton("->")
         self.layout_control.addWidget(self.btn_load)
         self.layout_control.addWidget(self.label_frame)
+        self.layout_control.addWidget(self.btn_left)
+        self.layout_control.addWidget(self.btn_right)
         self.layout_main.addLayout(self.layout_control)
 
         self.label_path = QLabel(".")
@@ -35,12 +46,10 @@ class bboxChecker(QWidget):
 
         self.btn_load.pressed.connect(self.showDialog)
 
+        self.widget_display.setFixedSize(QSize(1280,720))
         self.label_frame.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.widget_slider.valueChanged.connect(self.display)
-        self.frameCount = 0
-    
+        self.widget_slider.sliderMoved.connect(self.display)
 
-    
 
     def showDialog(self):
         path = QFileDialog.getOpenFileName(self, 'Open file', './', "mp4 (*.mp4)")
@@ -56,23 +65,15 @@ class bboxChecker(QWidget):
             self.load(path)
 
     def load(self,path):
-        cap = cv2.VideoCapture(path)
-        self.frameCount = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.frameWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        self.frameHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-
-        self.buf = np.empty((self.frameCount, self.frameHeight, self.frameWidth, 3), np.dtype('uint8'))
-        print(self.buf.shape)
+        if self.cap is not None:
+            self.cap.release()
+        self.cap = cv2.VideoCapture(path)
+        self.frameCount = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.frameWidth = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.frameHeight = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         self.widget_slider.setRange(0,self.frameCount)
 
-        fc = 0
-        ret = True
-
-        while (fc < self.frameCount  and ret):
-            ret, self.buf[fc] = cap.read()
-            fc += 1
-        cap.release()
 
         self.display(0)
 
@@ -82,11 +83,16 @@ class bboxChecker(QWidget):
         if idx < 0 or idx >= self.frameCount:
             return
 
-        tmp = self.buf[idx]
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES,idx)
+        ret,tmp = self.cap.read()
 
+        if not ret :
+            return
+
+        tmp = cv2.resize(tmp,(self.w,self.h),interpolation = cv2.INTER_LINEAR )
         cv2.rectangle(tmp, (50,50), (100,100), (0,255,0), 2)
 
-        qImg = QImage(tmp, self.frameWidth, self.frameHeight, self.frameWidth*3, QImage.Format.Format_BGR888)
+        qImg = QImage(tmp, self.w, self.h, self.w*3, QImage.Format.Format_BGR888)
         pixmap01 = QPixmap.fromImage(qImg)
         pixmap_image = QPixmap(pixmap01)
         self.widget_display.setPixmap(pixmap_image)
