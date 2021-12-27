@@ -1,6 +1,7 @@
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import (QApplication,QFileDialog, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSlider,QVBoxLayout, QWidget)
 from PyQt6.QtGui import QDesktopServices, QImage, QPixmap, QGuiApplication
+from math import gcd
 
 # https://doc.qt.io/qt-6/opengl-changes-qt6.html
 #from PyQt6.QtOpenGLWidgets import QOpenGLWidget
@@ -9,12 +10,13 @@ import numpy as np
 import cv2
 import json, pdb
 
+
 class bboxChecker(QWidget):
     def __init__(self, parent=None):
         super(bboxChecker, self).__init__(parent)
         self.idx = 0
-        self.w = 1280
-        self.h = 720
+        self.w = 640 #1280
+        self.h = 360 #720
         self.frameCount = 0
         self.cap = None
         self.setWindowTitle('Bounding Box Checker')
@@ -47,7 +49,8 @@ class bboxChecker(QWidget):
 
         self.btn_load.pressed.connect(self.showDialog)
         
-        self.widget_display.setFixedSize(QSize(self.w,self.h))
+        # self.widget_display.setFixedSize(QSize(self.w,self.h))
+        self.widget_display.resize(QSize(self.w,self.h))
         self.label_frame.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.widget_slider.sliderMoved.connect(self.display)
         self.btn_left.released.connect(self.flag_left)
@@ -121,9 +124,18 @@ class bboxChecker(QWidget):
 
         cv2.rectangle(tmp, (face[1],face[0]), (face[3],face[2]), (255,0,0), 2) # Face - Blue
         cv2.rectangle(tmp, (lip[1],lip[0]), (lip[3],lip[2]), (0,0,255), 2) # Lip - Red
-        tmp = cv2.resize(tmp,(self.w,self.h), interpolation = cv2.INTER_LINEAR)
         
-        qImg = QImage(tmp, self.w, self.h, self.w*3, QImage.Format.Format_BGR888)
+        # tmp = cv2.resize(tmp,(self.w,self.h), interpolation = cv2.INTER_LINEAR)
+        # qImg = QImage(tmp, self.w, self.h, self.w*3, QImage.Format.Format_BGR888)
+        
+        [size_h, size_w, rgb] = tmp.shape
+        
+        size_h = int(size_h/3)
+        size_w = int(size_w/3)
+        
+        tmp = cv2.resize(tmp,(size_w,size_h), interpolation = cv2.INTER_LINEAR)
+        qImg = QImage(tmp, size_w, size_h, size_w*3, QImage.Format.Format_BGR888)
+        
         pixmap01 = QPixmap.fromImage(qImg)
         pixmap_image = QPixmap(pixmap01)
         self.widget_display.setPixmap(pixmap_image)
