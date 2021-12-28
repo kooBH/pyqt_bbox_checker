@@ -66,7 +66,6 @@ class bboxChecker(QWidget):
         
         self.center()
         
-    
     def center(self): 
         cp = QGuiApplication.primaryScreen().availableGeometry().center()
         x = cp.x() - self.w/2
@@ -97,9 +96,24 @@ class bboxChecker(QWidget):
                 self.label_path1.setText('[mp4] ' + self.path_mp4)
                 pass
             else : 
-                self.label_path1.setText('[mp4] ' + self.path_mp4)
-                self.load(self.path_mp4, self.path_json)
+                tmp_mp4 = self.path_mp4.split('/')
+                tmp_mp4 = tmp_mp4[-1].split('.')
+                tmp_json = self.path_json.split('/')
+                tmp_json = tmp_json[-1].split('.')
 
+                if tmp_mp4[0] == tmp_json[0]:
+                    self.label_path1.setText('[mp4] ' + self.path_mp4)
+                    self.load(self.path_mp4, self.path_json)
+                else:
+                    self.label_path1.setText('[mp4] ' + self.path_mp4)
+                    QMessageBox.information(self, 'Warning', '.mp4 file name is different from .json file name')
+                    pass
+                    # msgBox = QMessageBox(self)
+                    # msgBox.setWindowTitle("Warning")
+                    # msgBox.setIcon(QMessageBox.Icon.Warning)
+                    # msgBox.setText(".mp4 file name is different from .json file name")
+                    # msgBox.setStandardButtons(QMessageBox.StandardButton.Ok)
+    
     def showDialog_json(self):
         path_json = QFileDialog.getOpenFileName(self, 'Open file', ' ./', "json (*.json)")
         path_json = str(path_json[0])
@@ -112,10 +126,25 @@ class bboxChecker(QWidget):
                 self.label_path2.setText('[json] ' + self.path_json)
                 pass
             else : 
-                self.label_path2.setText('[json] ' + self.path_json)
-                self.load(self.path_mp4, self.path_json)
+                tmp_mp4 = self.path_mp4.split('/')
+                tmp_mp4 = tmp_mp4[-1].split('.')
+                tmp_json = self.path_json.split('/')
+                tmp_json = tmp_json[-1].split('.')
+                
+                if tmp_mp4[0] == tmp_json[0]:
+                    self.label_path2.setText('[json] ' + self.path_json)
+                    self.load(self.path_mp4, self.path_json)
+                else:
+                    self.label_path2.setText('[json] ' + self.path_json)
+                    QMessageBox.information(self, 'Warning', '.json file name is different from .mp4 file name')
+                    pass
+                    # msgBox = QMessageBox(self)
+                    # msgBox.setWindowTitle("Warning")
+                    # msgBox.setIcon(QMessageBox.Icon.Warning)
+                    # msgBox.setText(".json file name is different from .mp4 file name")
+                    # msgBox.setStandardButtons(QMessageBox.StandardButton.Ok)
     
-    def load(self,path_mp4, path_json):
+    def load(self, path_mp4, path_json):
         if self.cap is not None:
             self.cap.release()
         self.cap = cv2.VideoCapture(path_mp4)
