@@ -1,3 +1,4 @@
+from PyQt6 import QtWidgets
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import (QApplication,QFileDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton, QSizePolicy, QSlider,QVBoxLayout, QWidget)
 from PyQt6.QtGui import QDesktopServices, QImage, QPixmap, QGuiApplication
@@ -106,14 +107,13 @@ class bboxChecker(QWidget):
                     self.load(self.path_mp4, self.path_json)
                 else:
                     self.label_path1.setText('[mp4] ' + self.path_mp4)
-                    QMessageBox.information(self, 'Warning', '.mp4 file name is different from .json file name')
-                    pass
-                    # msgBox = QMessageBox(self)
-                    # msgBox.setWindowTitle("Warning")
-                    # msgBox.setIcon(QMessageBox.Icon.Warning)
-                    # msgBox.setText(".mp4 file name is different from .json file name")
-                    # msgBox.setStandardButtons(QMessageBox.StandardButton.Ok)
-    
+                    reply = QMessageBox.information(self, 'Warning', '.mp4 file name is different from .json file name',
+                                            QtWidgets.QMessageBox.StandardButton.Ignore | QtWidgets.QMessageBox.StandardButton.Cancel)
+                    if reply == QtWidgets.QMessageBox.StandardButton.Ignore:
+                        self.load(self.path_mp4, self.path_json)
+                    else:
+                        pass
+
     def showDialog_json(self):
         path_json = QFileDialog.getOpenFileName(self, 'Open file', ' ./', "json (*.json)")
         path_json = str(path_json[0])
@@ -136,13 +136,12 @@ class bboxChecker(QWidget):
                     self.load(self.path_mp4, self.path_json)
                 else:
                     self.label_path2.setText('[json] ' + self.path_json)
-                    QMessageBox.information(self, 'Warning', '.json file name is different from .mp4 file name')
-                    pass
-                    # msgBox = QMessageBox(self)
-                    # msgBox.setWindowTitle("Warning")
-                    # msgBox.setIcon(QMessageBox.Icon.Warning)
-                    # msgBox.setText(".json file name is different from .mp4 file name")
-                    # msgBox.setStandardButtons(QMessageBox.StandardButton.Ok)
+                    reply = QMessageBox.warning(self, 'Warning', '.json file name is different from .mp4 file name',
+                                            QtWidgets.QMessageBox.StandardButton.Ignore | QtWidgets.QMessageBox.StandardButton.Cancel)
+                    if reply == QtWidgets.QMessageBox.StandardButton.Ignore:
+                        self.load(self.path_mp4, self.path_json)
+                    else:
+                        pass
     
     def load(self, path_mp4, path_json):
         if self.cap is not None:
@@ -157,6 +156,9 @@ class bboxChecker(QWidget):
         self.json_Face = data_json['Face_bounding_box']['xtl_ytl_xbr_ybr']
         self.json_Lip = data_json['Lip_bounding_box']['xtl_ytl_xbr_ybr']
         
+        if self.frameCount > len(self.json_Face):
+            QMessageBox.information(self, 'Information', 'length of mp4 file is longer than length of json file')
+        
         self.widget_slider.setRange(0,self.frameCount)
         
         self.display(0)
@@ -166,12 +168,18 @@ class bboxChecker(QWidget):
             return
         if idx < 0 or idx >= self.frameCount:
             return
-
+        
         self.cap.set(cv2.CAP_PROP_POS_FRAMES,idx)
         ret, tmp = self.cap.read()
-        face = self.json_Face[idx]
-        lip = self.json_Lip[idx]
-               
+        
+        if idx >= len(self.json_Face):
+            face = [0, 0, 0, 0]
+            lip = [0, 0, 0, 0]
+        else:
+            face = self.json_Face[idx]
+            lip = self.json_Lip[idx]
+            
+        
         if not ret :
             return
 
