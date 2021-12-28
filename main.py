@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtWidgets import (QApplication,QFileDialog, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSlider,QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QApplication,QFileDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton, QSizePolicy, QSlider,QVBoxLayout, QWidget)
 from PyQt6.QtGui import QDesktopServices, QImage, QPixmap, QGuiApplication
 from math import gcd
 
@@ -21,6 +21,9 @@ class bboxChecker(QWidget):
         self.cap = None
         self.setWindowTitle('Bounding Box Checker')
         
+        self.path_mp4 = ""
+        self.path_json = ""
+        
         ## PyQt6 GUI
         self.layout_main = QVBoxLayout()
 
@@ -31,23 +34,28 @@ class bboxChecker(QWidget):
         self.layout_main.addWidget(self.widget_slider)
 
         self.layout_control = QHBoxLayout()
-        self.btn_load = QPushButton("Load")
+        self.btn_load1 = QPushButton("[Load].mp4")
+        self.btn_load2 = QPushButton("[Load].json")
         self.label_frame = QLabel("/")
         self.btn_left = QPushButton("<-")
         self.btn_right = QPushButton("->")
-        self.layout_control.addWidget(self.btn_load)
+        self.layout_control.addWidget(self.btn_load1)
+        self.layout_control.addWidget(self.btn_load2)
         self.layout_control.addWidget(self.label_frame)
         self.layout_control.addWidget(self.btn_left)
         self.layout_control.addWidget(self.btn_right)
         self.layout_main.addLayout(self.layout_control)
         
         
-        self.label_path = QLabel(".")
-        self.layout_main.addWidget(self.label_path)
+        self.label_path1 = QLabel("[mp4]")
+        self.layout_main.addWidget(self.label_path1)
+        self.label_path2 = QLabel("[json]")
+        self.layout_main.addWidget(self.label_path2)
 
         self.setLayout(self.layout_main)
 
-        self.btn_load.pressed.connect(self.showDialog)
+        self.btn_load1.pressed.connect(self.showDialog_mp4)
+        self.btn_load2.pressed.connect(self.showDialog_json)
         
         # self.widget_display.setFixedSize(QSize(self.w,self.h))
         self.widget_display.resize(QSize(self.w,self.h))
@@ -77,20 +85,36 @@ class bboxChecker(QWidget):
         self.widget_slider.setValue(idx)
         self.display(idx)
     
-    def showDialog(self):
+    def showDialog_mp4(self):
         path_mp4 = QFileDialog.getOpenFileName(self, 'Open file', './', "mp4 (*.mp4)")
-        # (path_mp4, type)
         path_mp4 = str(path_mp4[0])
         self.path_mp4 = path_mp4
-        path_json = path_mp4.replace('/video/', '/json/').replace('.mp4', '.json')
-        self.path_json = path_json
         
         if path_mp4 == "" :
             pass
         else :
-            self.label_path.setText(path_mp4)
-            self.load(path_mp4, path_json)
+            if self.path_json == "" :
+                self.label_path1.setText('[mp4] ' + self.path_mp4)
+                pass
+            else : 
+                self.label_path1.setText('[mp4] ' + self.path_mp4)
+                self.load(self.path_mp4, self.path_json)
 
+    def showDialog_json(self):
+        path_json = QFileDialog.getOpenFileName(self, 'Open file', ' ./', "json (*.json)")
+        path_json = str(path_json[0])
+        self.path_json = path_json
+        
+        if path_json == "" :
+                pass
+        else :
+            if self.path_mp4 == "" :
+                self.label_path2.setText('[json] ' + self.path_json)
+                pass
+            else : 
+                self.label_path2.setText('[json] ' + self.path_json)
+                self.load(self.path_mp4, self.path_json)
+    
     def load(self,path_mp4, path_json):
         if self.cap is not None:
             self.cap.release()
