@@ -1,16 +1,109 @@
 from PyQt6 import QtWidgets
+from PyQt6 import QtGui
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtWidgets import (QApplication,QFileDialog, QHBoxLayout, QLabel, QMessageBox, QPushButton, QSizePolicy, QSlider,QVBoxLayout, QWidget)
-from PyQt6.QtGui import QDesktopServices, QImage, QPixmap, QGuiApplication
-from math import gcd
+# from PyQt6.QtWidgets import (QApplication, QFileDialog, QHBoxLayout, QLabel, QMessageBox, QPlainTextEdit, QPushButton, QScrollArea, QSlider, QVBoxLayout, QWidget, QMainWindow)
+# from PyQt6.QtGui import (QImage, QPixmap, QGuiApplication, QAction)
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import *
 
 # https://doc.qt.io/qt-6/opengl-changes-qt6.html
-#from PyQt6.QtOpenGLWidgets import QOpenGLWidget
+# from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 
 import numpy as np
 import cv2
 import json, pdb
+import os
 
+
+class LicenseDialog(QDialog):
+    def __init__(self,parent):
+        QDialog.__init__(self,parent)
+        # super(LicenseDialog, self).__init__(parent)
+        self.w = 400
+        self.h = 300
+        self.resize(self.w, self.h)
+        
+        # self.layout = QVBoxLayout(self)
+
+        self.tabs = QTabWidget()
+        
+        self.tabs.addTab(tab1(), "License")
+        self.tabs.addTab(tab2(), "3rd Party")
+        
+        self.vbox = QVBoxLayout()
+        self.vbox.addWidget(self.tabs)
+        
+        self.setLayout(self.vbox)
+        self.setWindowTitle('Info. License')
+        
+        self.show()
+
+class tab1(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+        
+    def initUI(self):
+        path = os.path.join(os.path.dirname(__file__), 'LICENSE.txt')
+        if os.path.isfile(path):
+            text = open(path, 'rt', encoding='UTF8').read()
+            
+        # text = open('LICENSE.txt', 'rt', encoding='UTF8').read()
+        
+        scrollArea = QScrollArea()
+        text_browser = QLabel(text)
+        scrollArea.setWidget(text_browser)
+        
+        vbox = QVBoxLayout()
+        vbox.addWidget(scrollArea)
+        self.setLayout(vbox)
+
+class tab2(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+        
+    def initUI(self):
+        path = os.path.join(os.path.dirname(__file__), 'LICENSE_3rd_party.txt')
+        if os.path.isfile(path):
+            text = open(path, 'rt', encoding='UTF8').read()
+            
+        # text = open('LICENSE_3rd_party.txt', 'rt', encoding='UTF8').read()
+        
+        scrollArea = QScrollArea()
+        text_browser = QLabel(text)
+        scrollArea.setWidget(text_browser)
+        
+        vbox = QVBoxLayout()
+        vbox.addWidget(scrollArea)
+        self.setLayout(vbox)
+
+class MainWindow(QMainWindow):
+    def __init__(self, parent=None):
+        super(MainWindow, self).__init__(parent)
+        
+        self.w = 700
+        self.h = 200
+        self.resize(self.w, self.h)
+        
+        # self.setStyleSheet("background-color: #A297BD")
+        self.BoxWidget = bboxChecker(parent=self)
+        self.setCentralWidget(self.BoxWidget)
+        
+        # menu
+        menu_action = QAction("&License", self)
+        menu_action.triggered.connect(self.showLicense)
+        # menu_action.setCheckable(True)
+        
+        menubar = self.menuBar()
+        menubar.setStyleSheet("background-color: #AAAAAA")
+        fileMenu = menubar.addMenu("&Info")
+        fileMenu.addAction(menu_action)
+        
+        
+    def showLicense(self):
+        licenseDialog = LicenseDialog(self)
+        licenseDialog.show()
 
 class bboxChecker(QWidget):
     def __init__(self, parent=None):
@@ -31,6 +124,7 @@ class bboxChecker(QWidget):
         self.widget_display = QLabel()
         self.layout_main.addWidget(self.widget_display)
 
+        # widget
         self.widget_slider = QSlider(Qt.Orientation.Horizontal)
         self.layout_main.addWidget(self.widget_slider)
 
@@ -58,7 +152,6 @@ class bboxChecker(QWidget):
         self.btn_load1.pressed.connect(self.showDialog_mp4)
         self.btn_load2.pressed.connect(self.showDialog_json)
         
-        # self.widget_display.setFixedSize(QSize(self.w,self.h))
         self.widget_display.resize(QSize(self.w,self.h))
         self.label_frame.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.widget_slider.sliderMoved.connect(self.display)
@@ -66,7 +159,7 @@ class bboxChecker(QWidget):
         self.btn_right.released.connect(self.flag_right)
         
         self.center()
-        
+    
     def center(self): 
         cp = QGuiApplication.primaryScreen().availableGeometry().center()
         x = cp.x() - self.w/2
@@ -186,9 +279,6 @@ class bboxChecker(QWidget):
         cv2.rectangle(tmp, (face[1],face[0]), (face[3],face[2]), (255,0,0), 2) # Face - Blue
         cv2.rectangle(tmp, (lip[1],lip[0]), (lip[3],lip[2]), (0,0,255), 2) # Lip - Red
         
-        # tmp = cv2.resize(tmp,(self.w,self.h), interpolation = cv2.INTER_LINEAR)
-        # qImg = QImage(tmp, self.w, self.h, self.w*3, QImage.Format.Format_BGR888)
-        
         [size_h, size_w, rgb] = tmp.shape
         
         size_h = int(size_h/3)
@@ -203,10 +293,12 @@ class bboxChecker(QWidget):
 
         self.label_frame.setText(str(idx)+" / "+str(self.frameCount))
 
+
 if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
-    gallery = bboxChecker()
+    # gallery = bboxChecker()
+    gallery = MainWindow()
     gallery.show()
     sys.exit(app.exec()) 
 

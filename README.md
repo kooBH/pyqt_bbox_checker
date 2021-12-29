@@ -1,11 +1,10 @@
 ## 
+
+입력 : 2가지 입력
+
+.mp4 파일
+.json 파일
+
   
-   
-입력 : 영상 + face label, lib label 데이터    
-   
-경로 :     
-    
-video/영상1.mp4     
-json/영상1.json    
-  
--> 'video/영상1.mp4' 읽고 'json' 폴더에 있는 '영상1.json'을 읽어서 bbox 생성
+-> '*.mp4' 읽고 '*.json'을 읽어서 bbox 생성
+-> 파일 명 달라도 경고 ignore하면 결과 확인 가능
