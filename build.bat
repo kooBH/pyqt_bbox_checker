@@ -1,1 +1,1 @@
-pyinstaller -w -F main.py -n bbox_check
+pyinstaller -w -F --add-data="LICENSE.txt;." --add-data="LICENSE_3rd_party.txt;." main.py -n bbox_check
