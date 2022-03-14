@@ -46,7 +46,7 @@ class tab1(QWidget):
     def initUI(self):
         path = os.path.join(os.path.dirname(__file__), 'LICENSE.txt')
         if os.path.isfile(path):
-            text = open(path, 'rt', encoding='UTF8').read()
+            text = open(path, 'rt', encoding='UTF-8').read()
             
         # text = open('LICENSE.txt', 'rt', encoding='UTF8').read()
         
@@ -66,7 +66,7 @@ class tab2(QWidget):
     def initUI(self):
         path = os.path.join(os.path.dirname(__file__), 'LICENSE_3rd_party.txt')
         if os.path.isfile(path):
-            text = open(path, 'rt', encoding='UTF8').read()
+            text = open(path, 'rt', encoding='UTF-8').read()
             
         # text = open('LICENSE_3rd_party.txt', 'rt', encoding='UTF8').read()
         
@@ -244,10 +244,11 @@ class bboxChecker(QWidget):
         self.frameWidth = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.frameHeight = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        with open(path_json, 'r') as f:
+        with open(path_json, 'r', encoding='UTF-8') as f:
             data_json = json.load(f)
-        self.json_Face = data_json['Face_bounding_box']['xtl_ytl_xbr_ybr']
-        self.json_Lip = data_json['Lip_bounding_box']['xtl_ytl_xbr_ybr']
+        # pdb.set_trace()
+        self.json_Face = data_json[0]['Bounding_box_info']['Face_bounding_box']['xtl_ytl_xbr_ybr']
+        self.json_Lip = data_json[0]['Bounding_box_info']['Lip_bounding_box']['xtl_ytl_xbr_ybr']
         
         if self.frameCount > len(self.json_Face):
             QMessageBox.information(self, 'Information', 'length of mp4 file is longer than length of json file')
